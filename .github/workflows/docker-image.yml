@@ -31,7 +31,7 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images:
-          ${{ inputs.dockerhub_path }}
+          ${{ inputs.dockerhub-path }}
 
     - name: Build and push Docker images
       uses: docker/build-push-action@v5
