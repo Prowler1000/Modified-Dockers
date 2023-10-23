@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - './Nextcloud/**'
+      - 'Nextcloud/**'
       
 jobs:
   call-workflow-passing-data:
