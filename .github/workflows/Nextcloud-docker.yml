@@ -8,7 +8,7 @@ on:
       
 jobs:
   call-workflow-passing-data:
-    uses: https://github.com/Prowler1000/Modified-Dockers/blob/main/.github/workflows/docker-image.yml@main
+    uses: .github/workflows/docker-image.yml@main
     with:
       dockerfile-path: Nextcloud/Dockerfile
       dockerhub-path: prowler1000/nextcloud-with-extras
