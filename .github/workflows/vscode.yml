@@ -1,0 +1,15 @@
+name: Build VSCode-Server Image
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'VSCode-Server/**'
+      
+jobs:
+  call-workflow-passing-data:
+    uses: ./.github/workflows/docker-image.yml
+    with:
+      dockerfile-path: VSCode-Server/Dockerfile
+      dockerhub-path: prowler1000/vscode-remote
+    secrets: inherit
