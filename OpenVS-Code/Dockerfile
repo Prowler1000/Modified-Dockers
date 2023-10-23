@@ -3,10 +3,6 @@ FROM gitpod/openvscode-server:latest
 ENV OPENVSCODE_SERVER_ROOT="/home/.openvscode-server"
 ENV OPENVSCODE="${OPENVSCODE_SERVER_ROOT}/bin/openvscode-server"
 
-USER root
-RUN
-USER openvscode-server
-
 SHELL ["/bin/bash", "-c"]
 RUN \
 	urls=(\
@@ -19,3 +15,7 @@ RUN \
 		"${tdir}"/* \
 	)\
 	&& for ext in "${exts[@]}"; do ${OPENVSCODE} --install-extension "${ext}"; done
+
+USER root
+RUN echo this is where youd put apt commands and whatnot
+USER openvscode-server
