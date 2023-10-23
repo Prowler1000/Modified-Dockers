@@ -3,6 +3,3 @@ A poorly named reposity to host a custom Dockerfiles from existing images to fin
 
 # Nextcloud
 Moved from Nextcloud being hosted on a VPS to a self-hosted docker and found there were some extra packages I needed.
-
-# OpenVS-Code
-Haven't made it yet, just placing this here for now. Imagine if I forgot to update this? That would never happen, right?
