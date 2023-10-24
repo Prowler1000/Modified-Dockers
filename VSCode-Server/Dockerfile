@@ -10,4 +10,4 @@ ENV DONT_PROMPT_WSL_INSTALL=true
 RUN useradd -ms /bin/bash vscode
 USER vscode
 WORKDIR /home/vscode
-ENTRYPOINT echo "Y" | code tunnel --accept-server-license-terms
+ENTRYPOINT code tunnel --accept-server-license-terms
