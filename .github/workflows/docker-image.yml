@@ -32,6 +32,7 @@ jobs:
       with:
         images:
           ${{ inputs.dockerhub-path }}
+        tags: type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build and push Docker images
       uses: docker/build-push-action@v5
@@ -39,5 +40,5 @@ jobs:
         context: .
         file: ${{ inputs.dockerfile-path }}
         push: true
-        tags: latest
+        tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
