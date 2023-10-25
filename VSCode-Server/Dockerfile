@@ -1,12 +1,22 @@
 FROM debian:stable
-RUN apt update && apt install -y curl gpg
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-RUN install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/microsoft-archive-keyring.gpg
-RUN sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
-RUN apt update && apt install -y code wget git libc6 libstdc++6 ca-certificates tar openssh-server
-#RUN python3 -m ensurepip && pip3 install --no-cache --upgrade pip setuptools
+# Requirements for VSCode
+RUN apt update && apt install -y curl git libc6 libstdc++6 ca-certificates openssh-server
+
+# Install VSCode CLI
+RUN \
+curl -Lk 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64' --output vscode_cli.tar.gz && \
+tar -xf vscode_cli.tar.gz
+
+# Personal requirements
+RUN apt install -y wget
+
+# Prep VSCode and define entry
 ENV DONT_PROMPT_WSL_INSTALL=true
-RUN useradd -ms /bin/bash vscode
-USER vscode
-WORKDIR /home/vscode
-ENTRYPOINT code tunnel --accept-server-license-terms
+
+ARG DOCKER_USER=vscode
+ARG DOCKER_GROUP=codegroup
+
+RUN groupadd $DOCKER_GROUP && useradd -m $DOCKER_USER && usermod -aG $DOCKER_GROUP $DOCKER_USER
+USER $DOCKER_USER
+WORKDIR /home/$DOCKER_USER
+ENTRYPOINT /code tunnel --accept-server-license-terms
