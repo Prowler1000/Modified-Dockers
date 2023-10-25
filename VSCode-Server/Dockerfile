@@ -18,5 +18,5 @@ ENV VSCODE_CLI_DATA_DIR=/vscode
 RUN useradd -m vscode
 RUN mkdir /vscode && chown -R vscode: /vscode
 USER vscode
-WORKDIR /home/vscode
+WORKDIR /vscode
 ENTRYPOINT /code tunnel --accept-server-license-terms
