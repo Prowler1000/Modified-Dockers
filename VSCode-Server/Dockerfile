@@ -18,6 +18,7 @@ RUN apt install --no-install-recommends -y wget
 
 # Prep VSCode and define entry
 ENV DONT_PROMPT_WSL_INSTALL=true
+ENV VSCODE_CLI_DATA_DIR=/vscode
 
 RUN useradd -m vscode
 RUN mkdir /vscode && chown -R vscode: /vscode
