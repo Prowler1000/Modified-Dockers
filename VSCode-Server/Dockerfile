@@ -18,10 +18,10 @@ RUN apt install --no-install-recommends -y wget
 
 # Prep VSCode and define entry
 ENV DONT_PROMPT_WSL_INSTALL=true
-ENV VSCODE_CLI_DATA_DIR=/vscode
+ENV VSCODE_CLI_DATA_DIR=/home/vscode
 
 RUN useradd -m vscode
 RUN mkdir /vscode && chown -R vscode: /vscode
-USER vscode
+#USER vscode
 WORKDIR /vscode
-ENTRYPOINT code tunnel --accept-server-license-terms
+ENTRYPOINT code --extensions-dir=/vscode/extensions --user-data-dir=/vscode/userdata tunnel --accept-server-license-terms
