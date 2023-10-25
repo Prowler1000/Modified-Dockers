@@ -19,4 +19,4 @@ RUN useradd -m vscode
 RUN mkdir /vscode && chown -R vscode: /vscode
 USER vscode
 WORKDIR /vscode
-ENTRYPOINT /code tunnel --accept-server-license-terms
+ENTRYPOINT /code --extensions-dir=/vscode/extensions --user-data-dir=/vscode/userdata tunnel --accept-server-license-terms
