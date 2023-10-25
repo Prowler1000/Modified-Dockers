@@ -13,10 +13,7 @@ RUN apt install -y wget
 # Prep VSCode and define entry
 ENV DONT_PROMPT_WSL_INSTALL=true
 
-ARG DOCKER_USER=vscode
-ARG DOCKER_GROUP=codegroup
-
-RUN groupadd $DOCKER_GROUP && useradd -m $DOCKER_USER && usermod -aG $DOCKER_GROUP $DOCKER_USER
-USER $DOCKER_USER
-WORKDIR /home/$DOCKER_USER
-ENTRYPOINT /code tunnel --accept-server-license-terms
+RUN useradd -m vscode && mv /code /home/vscode/code
+USER vscode
+WORKDIR /home/vscode
+ENTRYPOINT ./code tunnel --accept-server-license-terms
