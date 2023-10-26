@@ -1,4 +1,5 @@
 FROM debian:stable
+
 # Requirements for VSCode
 RUN apt update && apt install -y --no-install-recommends curl git libc6 libstdc++6 ca-certificates openssh-server
 
@@ -11,8 +12,16 @@ rm -r vscode_cli.tar.gz
 # Personal requirements
 RUN apt install --no-install-recommends -y wget
 
-RUN mkdir /vscode && mkdir /data
 ENV VSCODE_CLI_DATA_DIR=/vscode/cli
+ENV USER=vscode
+ENV UID=1199
 
-WORKDIR /data
+RUN \
+mkdir /userdata && mkdir /vscode && \
+adduser --uid $UID $USER && \
+chown -R :$USER /userdata && \
+chown -R :$USER /vscode
+
+USER $USER
+WORKDIR /userdata
 ENTRYPOINT /code tunnel --accept-server-license-terms
