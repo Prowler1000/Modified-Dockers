@@ -11,8 +11,10 @@ rm -r vscode_cli.tar.gz
 # Personal requirements
 RUN apt install --no-install-recommends -y wget python3 openjdk-17-jdk-headless
 
-RUN mkdir /vscode && mkdir /data
-ENV VSCODE_CLI_DATA_DIR=/vscode/cli
+RUN mkdir /vscode-cli && mkdir /data
+ENV VSCODE_CLI_DATA_DIR=/vscode-cli
+ENV VSCODE_CLI_USE_FILE_KEYCHAIN=true
+
 
 WORKDIR /data
 ENTRYPOINT /code tunnel --accept-server-license-terms
