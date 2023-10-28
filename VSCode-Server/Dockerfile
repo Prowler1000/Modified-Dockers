@@ -14,7 +14,7 @@ RUN apt install --no-install-recommends -y wget python3 openjdk-17-jdk-headless
 RUN mkdir /vscode-cli && mkdir /data
 ENV VSCODE_CLI_DATA_DIR=/vscode-cli
 ENV VSCODE_CLI_USE_FILE_KEYCHAIN=true
-
+ENV TUNNEL_NAME=docker_tunnel
 
 WORKDIR /data
-ENTRYPOINT /code tunnel --accept-server-license-terms
+ENTRYPOINT /code tunnel --name $TUNNEL_NAME --accept-server-license-terms
