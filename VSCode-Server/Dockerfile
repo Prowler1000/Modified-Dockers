@@ -5,7 +5,7 @@ RUN apt update && apt install -y --no-install-recommends curl git libc6 libstdc+
 # Install VS Code
 RUN \
 curl -Lk 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64' --output vscode_cli.tar.gz && \
-tar -xf vscode_cli.tar.gz && \
+tar -xf vscode_cli.tar.gz -C /usr/bin && \
 rm -r vscode_cli.tar.gz
 
 # Personal requirements
@@ -17,4 +17,4 @@ ENV VSCODE_CLI_USE_FILE_KEYCHAIN=true
 ENV TUNNEL_NAME=docker_tunnel
 
 WORKDIR /data
-ENTRYPOINT /code tunnel --name $TUNNEL_NAME --accept-server-license-terms
+ENTRYPOINT code tunnel --name $TUNNEL_NAME --accept-server-license-terms
