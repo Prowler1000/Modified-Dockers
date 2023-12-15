@@ -3,4 +3,5 @@ RUN set -ex; \
 apt-get update; \
 apt-get install -y --no-install-recommends \
 ffmpeg \
-php-bz2 \
+libbz2-dev
+RUN docker-php-ext-install bz2
