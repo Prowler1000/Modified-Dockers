@@ -35,7 +35,8 @@ jobs:
         images:
           ${{ inputs.dockerhub-path }}
         tags: |
-          type=raw,value=latest,enable=${{ env.IS_DEFAULT_BRANCH }}
+          type=raw,value=latest
+          type=raw,value=stable,enable=${{ env.IS_DEFAULT_BRANCH }}
           type=ref,event=branch,enable=${{ env.IS_DEFAULT_BRANCH == 'false' }}
 
     - name: Build and push Docker images
