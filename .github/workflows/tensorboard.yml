@@ -1,0 +1,15 @@
+name: Build Tensorboard Image
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Tensorboard/**'
+      
+jobs:
+  call-workflow-passing-data:
+    uses: ./.github/workflows/docker-image.yml
+    with:
+      dockerfile-path: Tensorboard/Dockerfile
+      dockerhub-path: prowler1000/tensorboard_host
+    secrets: inherit
