@@ -3,4 +3,4 @@ RUN pip3 install tensorboard
 #RUN pip3 install tensorflow
 
 RUN mkdir /summaries/
-CMD [ "tensorboard", "--logdir=/summaries/" ]
+CMD [ "tensorboard", "--logdir=/summaries/", "--bind_all"]
