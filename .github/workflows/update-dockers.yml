@@ -49,6 +49,7 @@ jobs:
         run: |
             echo "image-path=prowler1000/$(echo ${{ matrix.dockerfile_path }} | cut -d'/' -f1)" >> $GITHUB_ENV
             echo "dockerfile-path=$(echo ${{ matrix.dockerfile_path }})" >> $GITHUB_ENV
+            echo "build-context=$(dirname ${{ matrix.dockerfile_path }})" >> $GITHUB_ENV
 
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -73,7 +74,7 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ${{ env.build-context }}
           file: ${{ env.dockerfile-path }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
