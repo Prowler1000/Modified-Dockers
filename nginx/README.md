@@ -1,0 +1,1 @@
+This is my first shot at building a custom nginx container. I was using Linuxserver's Nginx image but wasn't 100% sure if it supported QUIC/http3 so I thought it was a good excuse to try and work on my understanding of Docker. Still needs some work because I'm not confident in what I'm doing but at least it builds and runs, right?
