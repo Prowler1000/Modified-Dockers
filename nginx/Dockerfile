@@ -3,6 +3,8 @@ ARG PCRE_VERSION=10.42
 ARG ZLIB_VERSION=1.3.1
 ARG OPENSSL_VERSION=1.1.1v
 
+ARG S6_OVERLAY_VERSION=3.1.4.1
+
 ARG RTMP_VERSION=1.2.2
 
 #WORKDIR /prereqs/boringssl
@@ -90,19 +92,19 @@ RUN ./configure \
 RUN make
 RUN make install
 
-FROM alpine:latest AS final
+FROM alpine:latest AS s6-base
+ARG S6_OVERLAY_VERSION
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
+RUN tar xvf /tmp/s6-overlay-noarch.tar.xz -C /
+RUN tar xvf /tmp/s6-overlay-x86_64.tar.xz -C /
+
+FROM s6-base AS s6-nginx
 COPY --from=build-nginx /usr/local/nginx /usr/local/nginx
 COPY --from=build-nginx /etc/nginx /etc/nginx
-RUN \
-    mkdir /config && \
-    # I need to create a default nginx.conf file in the repo
-    # and download it here. Haven't done that yet obvs.
-    cp /etc/nginx/nginx.conf /config/nginx.conf
-RUN \
-    rm /etc/nginx/nginx.conf && \
-    touch /etc/nginx/nginx.conf && \
-    echo "include /config/nginx.conf;" > /etc/nginx/nginx.conf
-ENTRYPOINT [ "/usr/local/nginx/sbin/nginx", "-g", "daemon off;" ]
+
+
+ENTRYPOINT [ "/init" ]
 
 EXPOSE 80/tcp 443/tcp 80/udp 443/udp
 
