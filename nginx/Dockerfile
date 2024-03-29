@@ -103,7 +103,7 @@ FROM s6-base AS s6-nginx
 COPY --from=build-nginx /usr/local/nginx /usr/local/nginx
 COPY --from=build-nginx /etc/nginx /etc/nginx
 
-ADD defaults/ /
+ADD preconfig/ /
 
 ENTRYPOINT [ "/init" ]
 

@@ -1,0 +1,4 @@
+#!/bin/ash
+if [ ! -f /config/nginx/nginx.conf ]; then
+    cp /defaults/nginx.conf /config/nginx/nginx.conf
+fi
