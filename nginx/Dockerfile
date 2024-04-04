@@ -125,7 +125,7 @@ ENV PATH="/usr/local/openssl/bin:${PATH}"
 # Update library configuration for Alpine Linux
 RUN echo "/usr/local/openssl/lib" > /etc/ld-musl-x86_64.path
 
-ADD preconfig/ /
+COPY preconfig/ /
 
 ENTRYPOINT [ "/init" ]
 
