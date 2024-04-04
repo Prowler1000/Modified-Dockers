@@ -126,6 +126,9 @@ ENV PATH="/usr/local/openssl/bin:${PATH}"
 RUN echo "/usr/local/openssl/lib" > /etc/ld-musl-x86_64.path
 
 COPY preconfig/ /
+RUN \
+    find /etc/s6-overlay/s6-rc.d/ -name "run" -exec chmod +x {} \; && \
+    find /etc/s6-overlay/s6-rc.d/ -name "up" -exec chmod +x {} \;
 
 ENTRYPOINT [ "/init" ]
 
