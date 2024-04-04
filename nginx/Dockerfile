@@ -2,6 +2,7 @@ ARG NGINX_VERSION=1.25.1
 ARG PCRE_VERSION=10.42
 ARG ZLIB_VERSION=1.3.1
 ARG OPENSSL_VERSION=1.1.1v
+ARG LIBRESSL_VERSION=3.9.1
 
 ARG S6_OVERLAY_VERSION=3.1.4.1
 
@@ -13,17 +14,7 @@ ARG RTMP_VERSION=1.2.2
 # in one version would require a redownload and rebuild of all
 # dependencies.
 
-#WORKDIR /prereqs/boringssl
-#RUN \
-#    echo "Download and configure BoringSSL" && \
-#    git clone https://boringssl.googlesource.com/boringssl . && \
-#    mkdir build && \
-#    cd build && \
-#    cmake -DCMAKE_BUILD_TYPE=Release .. && \
-#    make
-
 FROM alpine:latest AS build
-
 RUN \
     echo "Update and install dependencies" && \
     apk update && \
@@ -39,6 +30,26 @@ RUN \
     echo "Create build and source directories" && \
     mkdir -p /build /source
 
+# Download boringssl for use with nginx
+FROM build AS download-boringssl
+WORKDIR /source
+RUN git clone https://boringssl.googlesource.com/boringssl
+
+FROM download-boringssl AS build-boringssl
+WORKDIR /source/boringssl
+RUN mkdir build
+WORKDIR /source/boringssl/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release ..
+RUN make
+
+FROM build AS download-libressl
+ARG LIBRESSL_VERSION
+WORKDIR /source
+RUN wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz
+RUN tar -zxf libressl-$LIBRESSL_VERSION.tar.gz -C .
+RUN rm -f libressl-$LIBRESSL_VERSION.tar.gz
+RUN mv libressl-$LIBRESSL_VERSION/ ./libressl
+
 FROM build AS download-pcre2
 ARG PCRE_VERSION
 WORKDIR /source
@@ -47,12 +58,6 @@ RUN tar -zxf pcre2-$PCRE_VERSION.tar.gz -C .
 RUN rm -f pcre2-$PCRE_VERSION.tar.gz
 RUN mv pcre2-$PCRE_VERSION/ ./pcre2
 
-FROM download-pcre2 AS build-pcre2
-WORKDIR /source/pcre2
-RUN ./configure --prefix=/build/pcre2/
-RUN make
-
-
 FROM build AS download-zlib
 ARG ZLIB_VERSION
 WORKDIR /source
@@ -60,12 +65,6 @@ RUN wget https://zlib.net/zlib-$ZLIB_VERSION.tar.gz
 RUN tar -zxf zlib-$ZLIB_VERSION.tar.gz -C .
 RUN rm -f zlib-$ZLIB_VERSION.tar.gz
 RUN mv zlib-$ZLIB_VERSION/ ./zlib
-
-FROM download-zlib AS build-zlib
-WORKDIR /source/zlib
-RUN ./configure --prefix=/build/zlib/
-RUN make
-
 
 
 FROM build as download-openssl
@@ -82,17 +81,18 @@ RUN ./config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl/ssl \
     && make \
     && make install_sw
 
+
 FROM build AS build-nginx
 ARG NGINX_VERSION
-COPY --from=download-pcre2 /source/pcre2 /source/pcre2
-COPY --from=download-zlib /source/zlib /source/zlib
-COPY --from=download-openssl /source/openssl /source/openssl
-
 WORKDIR /source
 
 RUN wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz
 RUN tar zxf nginx-$NGINX_VERSION.tar.gz
 RUN rm -f nginx-$NGINX_VERSION.tar.gz
+
+COPY --from=download-pcre2 /source/pcre2 /source/pcre2
+COPY --from=download-zlib /source/zlib /source/zlib
+COPY --from=download-libressl /source/libressl /source/libressl
 
 WORKDIR /source/nginx-$NGINX_VERSION
 RUN ./configure \
@@ -101,7 +101,7 @@ RUN ./configure \
         --with-pcre=/source/pcre2 \
         --with-pcre-jit \
         --with-zlib=/source/zlib \
-        --with-openssl=/source/openssl \
+        --with-openssl=/source/libressl \
         --with-http_ssl_module \
         --with-http_v2_module \
         --with-stream \
@@ -109,12 +109,11 @@ RUN ./configure \
         --with-threads \
         --with-debug \
         --with-http_v3_module \
-        --with-cc-opt="-I../boringssl/include" \
-        --with-ld-opt="-L../boringssl/build/ssl \
-                       -L../boringssl/build/crypto"
+        --with-cc-opt="-I../libressl/build/include" \
+        --with-ld-opt="-L../libressl/build/lib"
 RUN make
 RUN make install
-
+#RUN strip /usr/local/nginx/sbin/nginx
 
 # Download and extract s6-overlay
 
@@ -137,15 +136,6 @@ ENV PATH="/usr/local/openssl/bin:${PATH}"
 
 # Update library configuration for Alpine Linux
 RUN echo "/usr/local/openssl/lib" > /etc/ld-musl-x86_64.path
-    
-# Create nginx user and group
-#RUN adduser -D -H -u 1000 -s /bin/sh -G users nginx
-
-# Create config directory and set ownership
-#RUN mkdir /config && chown nginx:users /config
-
-# Set the user to run the container as
-#USER nginx
 
 ADD preconfig/ /
 
