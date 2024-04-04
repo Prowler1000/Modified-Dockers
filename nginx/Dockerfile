@@ -30,18 +30,6 @@ RUN \
     echo "Create build and source directories" && \
     mkdir -p /build /source
 
-# Download boringssl for use with nginx
-FROM build AS download-boringssl
-WORKDIR /source
-RUN git clone https://boringssl.googlesource.com/boringssl
-
-FROM download-boringssl AS build-boringssl
-WORKDIR /source/boringssl
-RUN mkdir build
-WORKDIR /source/boringssl/build
-RUN cmake -DCMAKE_BUILD_TYPE=Release ..
-RUN make
-
 FROM build AS download-libressl
 ARG LIBRESSL_VERSION
 WORKDIR /source
