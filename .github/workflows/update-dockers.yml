@@ -30,7 +30,7 @@ jobs:
       - name: Filter Dockerfiles
         id: filter-files
         run: |
-            echo "filtered_files=$(echo ${{ env.changed_files }} | tr ' ' '\n' | grep -E 'Dockerfile')" >> $GITHUB_ENV
+            echo "filtered_files=$(echo ${{ env.changed_files }} | tr ' ' '\n' | grep -E 'Dockerfile' | tr '\n' ' ')" >> $GITHUB_ENV
       - name: Parse changed files
         id: parse-files
         run: |
