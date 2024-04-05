@@ -1,7 +1,6 @@
 #!/bin/ash
 mkdir -p \
-    /config/ssl \
-    /config/ssl/default \
     /config/nginx \
     /config/nginx/sites \
-    /config/www
+    /config/www \
+    /ssl/default
