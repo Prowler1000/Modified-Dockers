@@ -1,12 +1,11 @@
 ARG NGINX_VERSION=1.25.1
 ARG PCRE_VERSION=10.42
 ARG ZLIB_VERSION=1.3.1
-ARG OPENSSL_VERSION=1.1.1v
 ARG LIBRESSL_VERSION=3.9.1
 
 ARG S6_OVERLAY_VERSION=3.1.4.1
 
-ARG RTMP_VERSION=1.2.2
+#ARG RTMP_VERSION=1.2.2
 
 # Downloads and builds are separated into individual stages to
 # allow for parallel building of dependencies while building
@@ -54,22 +53,6 @@ RUN tar -zxf zlib-$ZLIB_VERSION.tar.gz -C .
 RUN rm -f zlib-$ZLIB_VERSION.tar.gz
 RUN mv zlib-$ZLIB_VERSION/ ./zlib
 
-
-FROM build as download-openssl
-ARG OPENSSL_VERSION
-WORKDIR /source
-RUN wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
-RUN tar -zxf openssl-$OPENSSL_VERSION.tar.gz -C .
-RUN rm -f openssl-$OPENSSL_VERSION.tar.gz
-RUN mv openssl-$OPENSSL_VERSION/ ./openssl
-
-FROM download-openssl AS build-openssl
-WORKDIR /source/openssl
-RUN ./config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl/ssl \
-    && make \
-    && make install_sw
-
-
 FROM build AS build-nginx
 ARG NGINX_VERSION
 WORKDIR /source
@@ -110,19 +93,14 @@ ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLA
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
 RUN tar xvf /tmp/s6-overlay-noarch.tar.xz -C /
 RUN tar xvf /tmp/s6-overlay-x86_64.tar.xz -C /
+RUN apk add \
+    openssl
 
 # Start the final image
 
 FROM s6-base AS final
 COPY --from=build-nginx /usr/local/nginx /usr/local/nginx
 COPY --from=build-nginx /etc/nginx /etc/nginx
-    
-# Copy OpenSSL from build-openssl image
-COPY --from=build-openssl /usr/local/openssl /usr/local/openssl
-ENV PATH="/usr/local/openssl/bin:${PATH}"
-
-# Update library configuration for Alpine Linux
-RUN echo "/usr/local/openssl/lib" > /etc/ld-musl-x86_64.path
 
 COPY preconfig/ /
 RUN \
