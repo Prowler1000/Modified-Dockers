@@ -4,6 +4,20 @@ on:
   push:
     paths:
       - '**/Dockerfile'
+  workflow_dispatch:
+    inputs:
+      sha_before:
+        description: 'The "before" commit SHA to compare against. '
+        required: false
+        type: string
+      sha_after:
+        description: 'The "after" commit SHA to compare against. '
+        required: false
+        type: string
+      target_dockerfile:
+        description: 'The Dockerfile to build. '
+        required: false
+        type: string
 
 env:
   IS_DEFAULT_BRANCH: ${{ github.ref_name == github.event.repository.default_branch }}
@@ -22,7 +36,11 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-            if ${{ github.event_name == 'pull_request' }}; then
+            if [[ -n "${{ inputs.sha_before }}" && -n "${{ inputs.sha_after }}" ]]; then
+              echo "changed_files=$(git diff --name-only ${{ inputs.sha_before }} ${{ inputs.sha_after }} | xargs)" >> $GITHUB_ENV
+            elif [[ -n "${{ inputs.target_dockerfile }}" ]]; then
+              echo "changed_files=${{ inputs.target_dockerfile }}" >> $GITHUB_ENV
+            elif ${{ github.event_name == 'pull_request' }}; then
                 echo "changed_files=$(git diff --name-only -r HEAD^1 HEAD | xargs)" >> $GITHUB_ENV
             else
                 echo "changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | xargs)" >> $GITHUB_ENV
