@@ -101,7 +101,6 @@ RUN ./configure \
         --with-ld-opt="-L../libressl/build/lib"
 RUN make
 RUN make install
-#RUN strip /usr/local/nginx/sbin/nginx
 
 # Download and extract s6-overlay
 
