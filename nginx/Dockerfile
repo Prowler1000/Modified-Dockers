@@ -75,6 +75,7 @@ RUN ./configure \
         --with-openssl=/source/libressl \
         --with-http_ssl_module \
         --with-http_v2_module \
+        --with-http_auth_request_module \
         --with-stream \
         --with-stream_ssl_module \
         --with-threads \
