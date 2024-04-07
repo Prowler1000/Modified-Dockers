@@ -14,3 +14,7 @@ fi
 if [ ! -f /config/nginx/ssl-default.conf ]; then
     cp /defaults/nginx/ssl-default.conf /config/nginx/ssl-default.conf
 fi
+
+if [ ! -f /config/nginx/resolvers.conf ]; then
+    cp /defaults/nginx/resolvers.conf /config/nginx/resolvers.conf
+fi
