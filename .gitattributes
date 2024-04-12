@@ -1,0 +1,4 @@
+text=auto
+
+run eol=lf
+up eol=lf
