@@ -112,4 +112,4 @@ ENTRYPOINT [ "/init" ]
 
 EXPOSE 80/tcp 443/tcp 80/udp 443/udp
 
-VOLUME [ "/config", "/ssl" ]
+VOLUME [ "/config", "/ssl", "/log" ]

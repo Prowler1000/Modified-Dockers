@@ -4,4 +4,4 @@ mkdir -p \
     /config/nginx/sites \
     /config/www \
     /ssl/default \
-    /config/log 
+    /log 
