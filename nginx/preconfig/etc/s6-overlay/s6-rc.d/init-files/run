@@ -1,20 +1,11 @@
 #!/bin/ash
-if [ ! -f /config/nginx/nginx.conf ]; then
-    cp /defaults/nginx/nginx.conf /config/nginx/nginx.conf
-fi
-
-if [ ! -f /config/nginx/sites/default.conf ]; then
-    cp /defaults/nginx/sites/default.conf /config/nginx/sites/default.conf
-fi
-
-if [ ! -f /config/www/default.html ]; then
-    cp /defaults/www/default.html /config/www/default.html
-fi
-
-if [ ! -f /config/nginx/ssl-default.conf ]; then
-    cp /defaults/nginx/ssl-default.conf /config/nginx/ssl-default.conf
-fi
-
-if [ ! -f /config/nginx/resolvers.conf ]; then
-    cp /defaults/nginx/resolvers.conf /config/nginx/resolvers.conf
-fi
+for file in $(find /defaults/nginx -type f); do
+    dest_file="/config/nginx${file#/defaults/nginx}"
+    dest_dir=$(dirname "$dest_file") # In case I forget to add it to init-folders
+    if [ ! -d "$dest_dir" ]; then
+        mkdir -p "$dest_dir"
+    fi
+    if [ ! -f "$dest_file" ]; then
+        cp "$file" "$dest_file"
+    fi
+done
