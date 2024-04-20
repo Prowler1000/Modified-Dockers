@@ -102,10 +102,9 @@ FROM requirements-core AS localai-builder
 ARG GO_TAGS=""
 ARG GRPC_BACKENDS
 ARG MAKEFLAGS
-ARG HEALTHCHECK_ENDPOINT
 
 COPY --from=localai-source /build /build
-COPY root/ .
+COPY root/Makefile /build/Makefile
 
 ENV GRPC_BACKENDS=${GRPC_BACKENDS}
 ENV GO_TAGS=${GO_TAGS}
@@ -113,7 +112,6 @@ ENV MAKEFLAGS=${MAKEFLAGS}
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ENV NVIDIA_REQUIRE_CUDA="cuda>=${CUDA_MAJOR_VERSION}.0"
 ENV NVIDIA_VISIBLE_DEVICES=all
-ENV HEALTHCHECK_ENDPOINT=${HEALTHCHECK_ENDPOINT}
 
 ENV REBUILD=false
 
@@ -125,27 +123,29 @@ COPY --from=grpc /build/grpc/output /usr/local
 ENV PATH=/usr/local/bin:$PATH
 RUN make build
 
-# Cleanup build tools
-# I need to move some stuff to other images to
-# reduce the final image size, but this is for
-# security. Should definitely do more though.
-RUN rm -rf \
-    /build/grpc \
-    /root/go
+FROM ${BASE_IMAGE} AS final
+ARG HEALTHCHECK_ENDPOINT
 
-RUN apt-get remove -y \
-    git \
-    build-essential \
-    cmake \
-    curl \
-    unzip
+ENV HEALTHCHECK_ENDPOINT=${HEALTHCHECK_ENDPOINT}
 
-RUN mkdir -p /build/models
+WORKDIR /
+
+RUN mkdir -p \
+    /app/models
+
+COPY --from=localai-builder /build/local-ai /app/local-ai
+
+COPY --from=grpc /build/grpc/output /usr/local
+ENV PATH=/usr/local/bin:$PATH
+
+COPY root/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Define the health check command
 HEALTHCHECK --interval=1m --timeout=10m --retries=10 \
   CMD curl -f $HEALTHCHECK_ENDPOINT || exit 1
   
-VOLUME /build/models
+VOLUME /app/models
 EXPOSE 8080
-ENTRYPOINT [ "/build/entrypoint.sh" ]
+WORKDIR /app
+ENTRYPOINT [ "/app/entrypoint.sh" ]
