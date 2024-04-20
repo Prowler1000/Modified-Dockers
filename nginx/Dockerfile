@@ -103,7 +103,7 @@ FROM s6-base AS final
 COPY --from=build-nginx /usr/local/nginx /usr/local/nginx
 COPY --from=build-nginx /etc/nginx /etc/nginx
 
-COPY preconfig/ /
+COPY root/ /
 RUN \
     find /etc/s6-overlay/s6-rc.d/ -name "run" -exec chmod +x {} \; && \
     find /etc/s6-overlay/s6-rc.d/ -name "up" -exec chmod +x {} \;
