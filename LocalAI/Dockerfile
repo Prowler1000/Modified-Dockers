@@ -3,6 +3,7 @@ ARG FINAL_DISTRO=alpine
 ARG UBUNTU_TAG=20.04
 ARG ALPINE_TAG=latest
 ARG APP_DIR=app
+ARG LOCALAI_VERSION=v2.12.4
 
 ARG GRPC_BACKENDS=backend-assets/grpc/llama-cpp
 ARG GRPC_VERSION=v1.58.0
@@ -64,8 +65,9 @@ RUN echo "Building on $BUILD_DISTRO"
 ############################################
 
 FROM builder AS localai-source
+ARG LOCALAI_VERSION
 WORKDIR /
-RUN git clone https://github.com/mudler/LocalAI /build
+RUN git clone --branch $LOCALAI_VERSION https://github.com/mudler/LocalAI /build
 
 ############################################
 ############################################
