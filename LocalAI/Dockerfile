@@ -139,6 +139,7 @@ COPY --from=grpc /build/grpc/output /usr/local
 ENV PATH=/usr/local/bin:$PATH
 
 COPY root/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Define the health check command
 HEALTHCHECK --interval=1m --timeout=10m --retries=10 \
