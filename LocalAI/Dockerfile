@@ -2,7 +2,6 @@ ARG BUILD_DISTRO=ubuntu
 ARG FINAL_DISTRO=alpine
 ARG UBUNTU_TAG=20.04
 ARG ALPINE_TAG=latest
-ARG APP_DIR=build
 
 ARG GRPC_BACKENDS=backend-assets/grpc/llama-cpp
 ARG GRPC_VERSION=v1.58.0
@@ -98,7 +97,6 @@ ARG CUDA_MAJOR_VERSION=11
 ARG CUDA_MINOR_VERSION=7
 ARG TARGETARCH
 ARG TARGETVARIANT
-ARG GRPC_VERSION
 
 ENV BUILD_TYPE=${BUILD_TYPE}
 ENV EXTERNAL_GRPC_BACKENDS=
@@ -156,7 +154,6 @@ RUN make build
 
 FROM base-${FINAL_DISTRO} AS final
 ARG HEALTHCHECK_ENDPOINT
-ARG APP_DIR
 
 ENV HEALTHCHECK_ENDPOINT=${HEALTHCHECK_ENDPOINT}
 
@@ -166,21 +163,19 @@ RUN mkdir -p \
     /app/models
 
 COPY --from=localai-builder /build/local-ai /app/local-ai
-COPY --from=localai-builder /build $APP_DIR
 
 COPY --from=grpc /build/grpc/output /usr/local
 ENV PATH=/usr/local/bin:$PATH
 
-COPY root/entrypoint.sh /$APP_DIR/entrypoint.sh
-RUN chmod +x /$APP_DIR/entrypoint.sh
+COPY root/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Define the health check command
 HEALTHCHECK --interval=1m --timeout=10m --retries=10 \
   CMD curl -f $HEALTHCHECK_ENDPOINT || exit 1
   
-VOLUME /$APP_DIR/models
+VOLUME /app/models
 EXPOSE 8080
-WORKDIR /$APP_DIR
+WORKDIR /app
 #ENTRYPOINT [ "tail", "-f", "/dev/null" ]
-RUN echo $APP_DIR
-ENTRYPOINT [ "./entrypoint.sh" ]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
