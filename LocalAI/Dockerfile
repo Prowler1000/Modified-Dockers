@@ -1,4 +1,8 @@
-ARG BASE_IMAGE=ubuntu:22.04
+ARG BUILD_DISTRO=ubuntu
+ARG FINAL_DISTRO=alpine
+ARG UBUNTU_TAG=20.04
+ARG ALPINE_TAG=latest
+
 ARG GRPC_BACKENDS=backend-assets/grpc/llama-cpp
 ARG GRPC_VERSION=v1.58.0
 ARG HEALTHCHECK_ENDPOINT=http://localhost:8080/readyz
@@ -6,13 +10,54 @@ ARG HEALTHCHECK_ENDPOINT=http://localhost:8080/readyz
 ############################################
 ############################################
 
-FROM ${BASE_IMAGE} AS builder
+FROM ubuntu:${UBUNTU_TAG} AS base-ubuntu
+ARG UBUNTU_TAG
+RUN echo "Using ubuntu:$UBUNTU_TAG as base image."
+ENV DEBIAN_FRONTEND=noninteractive
+
+FROM alpine:${ALPINE_TAG} AS base-alpine
+ARG ALPINE_TAG
+RUN echo "Using alpine:$ALPINE_TAG as base image."
+RUN apk add gcompat bash
+
+FROM base-ubuntu AS builder-ubuntu
 RUN apt-get update && apt-get install -y \
     git \
     build-essential \
     cmake \
     curl \
     unzip
+# Copied from later image
+RUN apt-get install -y \
+        ca-certificates \
+        python3-pip \
+        unzip \
+        #libopenblas-dev \
+        libopencv-dev \
+    && \
+    apt-get clean
+RUN pip install --user grpcio-tools
+
+FROM base-alpine AS builder-alpine
+RUN apk update && apk add \
+    git \
+    build-base \
+    cmake \
+    curl \
+    unzip \
+    linux-headers
+# Copied from later image
+RUN apk add \
+        ca-certificates \
+        py3-pip \
+        unzip \
+        opencv-dev
+# Install grpcio-tools (the version in 22.04 is too old)
+RUN apk add py3-grpcio
+
+FROM builder-${BUILD_DISTRO} AS builder
+ARG BUILD_DISTRO
+RUN echo "Building on $BUILD_DISTRO"
 
 ############################################
 ############################################
@@ -54,20 +99,9 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 
 ENV BUILD_TYPE=${BUILD_TYPE}
-ENV DEBIAN_FRONTEND=noninteractive
-#ENV EXTERNAL_GRPC_BACKENDS="coqui:/build/backend/python/coqui/run.sh,huggingface-embeddings:/build/backend/python/sentencetransformers/run.sh,petals:/build/backend/python/petals/run.sh,transformers:/build/backend/python/transformers/run.sh,sentencetransformers:/build/backend/python/sentencetransformers/run.sh,autogptq:/build/backend/python/autogptq/run.sh,bark:/build/backend/python/bark/run.sh,diffusers:/build/backend/python/diffusers/run.sh,exllama:/build/backend/python/exllama/run.sh,vall-e-x:/build/backend/python/vall-e-x/run.sh,vllm:/build/backend/python/vllm/run.sh,mamba:/build/backend/python/mamba/run.sh,exllama2:/build/backend/python/exllama2/run.sh,transformers-musicgen:/build/backend/python/transformers-musicgen/run.sh,parler-tts:/build/backend/python/parler-tts/run.sh"
 ENV EXTERNAL_GRPC_BACKENDS=
 
 ARG GO_TAGS=""
-
-RUN apt-get install -y \
-        ca-certificates \
-        python3-pip \
-        unzip \
-        #libopenblas-dev \
-        libopencv-dev \
-    && \
-    apt-get clean
 
 # Install Go
 RUN curl -L -s https://go.dev/dl/go$GO_VERSION.linux-$TARGETARCH.tar.gz | tar -C /usr/local -xz
@@ -82,9 +116,6 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && \
 RUN curl -L -s https://github.com/protocolbuffers/protobuf/releases/download/v26.1/protoc-26.1-linux-x86_64.zip -o protoc.zip && \
     unzip -j -d /usr/local/bin protoc.zip bin/protoc && \
     rm protoc.zip
-
-# Install grpcio-tools (the version in 22.04 is too old)
-RUN pip install --user grpcio-tools
 
 # Set up OpenCV
 RUN ln -s /usr/include/opencv4/opencv2 /usr/include/opencv2
@@ -113,8 +144,6 @@ ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ENV NVIDIA_REQUIRE_CUDA="cuda>=${CUDA_MAJOR_VERSION}.0"
 ENV NVIDIA_VISIBLE_DEVICES=all
 
-ENV REBUILD=false
-
 WORKDIR /build
 RUN echo "GRPC_BACKENDS ${GRPC_BACKENDS}"
 RUN make prepare
@@ -123,7 +152,7 @@ COPY --from=grpc /build/grpc/output /usr/local
 ENV PATH=/usr/local/bin:$PATH
 RUN make build
 
-FROM ${BASE_IMAGE} AS final
+FROM base-${FINAL_DISTRO} AS final
 ARG HEALTHCHECK_ENDPOINT
 
 ENV HEALTHCHECK_ENDPOINT=${HEALTHCHECK_ENDPOINT}
@@ -148,4 +177,5 @@ HEALTHCHECK --interval=1m --timeout=10m --retries=10 \
 VOLUME /app/models
 EXPOSE 8080
 WORKDIR /app
+#ENTRYPOINT [ "tail", "-f", "/dev/null" ]
 ENTRYPOINT [ "/app/entrypoint.sh" ]
